@@ -1,0 +1,230 @@
+substitutions:
+  name: can-valve
+  friendly_name: can-valve
+  can_id: '1'
+  # PIN DEFINITIONS
+  # elements
+  led_pin: '6'
+  can_rx_pin: '4'
+  can_tx_pin: '5'
+  open_pin: '3'
+  close_pin: '7'
+  pushbutton_pin: '10'
+  open_endstop_pin: '20'
+  close_endstop_pin: '21'
+
+
+esphome:
+  name: $name
+  friendly_name: $friendly_name
+  on_boot:
+    priority: 800
+    then:
+      - if:
+          condition:
+            lambda: 'return (id(open_endstop).state);'
+          then:
+            - light.turn_on: 
+                id: open_indicator
+                effect: none
+                brightness: 100%
+            - canbus.send: 
+                data: [0x01]
+            - logger.log: "confirmed open state"                  
+          else:
+            - if:
+                condition: 
+                  lambda: 'return (!id(closed_endstop).state);'
+                then:
+                  - light.turn_on: 
+                      id: open_indicator
+                      effect: pulse
+                  - canbus.send: 
+                      data: [0x00]
+                  - logger.log: "confirmed closed state"                         
+
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+
+wifi:
+  ap: {}
+
+captive_portal:
+   
+canbus:
+  - platform: esp32_can
+    rx_pin: $can_rx_pin
+    tx_pin: $can_tx_pin
+    can_id: $can_id
+    on_frame: #An automation to perform when a CAN frame is received. See on_frame Trigger.
+    - can_id: $can_id # the received can_id
+      then:
+        - lambda: |-
+            if(x.size() > 0) {
+              switch(x[0]) {
+                case 0x0: 
+                  if (id(ball_valve).position != COVER_CLOSED){
+                    auto call = id(ball_valve).make_call();
+                    call.set_command_close();
+                    call.perform();
+                    ESP_LOGD("CAN", "closing as instructed"); 
+                  } else {
+                    ESP_LOGD("CAN", "received closing instruction but already closed"); 
+                  }                 
+                  break;
+                case 0x1: 
+                  if (id(ball_valve).position != COVER_OPEN){
+                    auto call = id(ball_valve).make_call();
+                    call.set_command_open();
+                    call.perform();
+                    ESP_LOGD("CAN", "opening as instructed"); 
+                  } else {
+                    ESP_LOGD("CAN", "received opening instruction but already open"); 
+                  }                 
+                  break;        
+                case 0x2: 
+                    auto call = id(ball_valve).make_call();
+                    call.set_command_stop();
+                    call.perform();
+                    ESP_LOGD("CAN", "stopping as instructed"); 
+                  break;                             
+              }
+            }
+ 
+switch:
+  - platform: gpio
+    pin: $open_pin
+    id: open_pin
+    interlock: &interlock_group [open_pin, close_pin]
+    # restore_mode: ALWAYS_OFF
+  - platform: gpio
+    pin: $close_pin
+    id: close_pin
+    interlock: *interlock_group
+    # restore_mode: ALWAYS_OFF
+
+output:    
+  - platform: ledc
+    id: switch_led
+    pin: $led_pin
+
+light: 
+  - platform: monochromatic
+    name: Switch LED
+    output: switch_led
+    id: open_indicator
+    default_transition_length: 0s
+    effects:
+      - pulse:
+          update_interval: 0.2s
+          transition_length: 0.2s
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: $open_endstop_pin
+      mode:
+        input: true
+        pullup: true
+    id: open_endstop
+    on_press:
+      then:
+      - light.turn_on: 
+          id: open_indicator 
+          effect: none
+          brightness: 100%
+      - canbus.send: 
+          data: [0x02]
+      - logger.log: "confirmed open state"
+    on_release:
+      - canbus.send: 
+          data: [0x03]
+      - logger.log: "confirmed no longer open"                     
+  - platform: gpio
+    pin:
+      number: $close_endstop_pin
+      mode:
+        input: true
+        pullup: true
+    id: closed_endstop
+    on_press:
+      then:
+        - light.turn_off: open_indicator
+        - canbus.send: 
+            data: [0x00]
+        - logger.log: "confirmed closed state"
+    on_release:
+      - canbus.send: 
+          data: [0x01]
+      - logger.log: "confirmed no longer closed"                       
+  - platform: gpio
+    pin: 
+      number: $pushbutton_pin
+      mode:
+        input: true
+        pullup: true
+    id: pushbutton
+    filters:
+      - invert:
+    on_press:
+      lambda: !lambda |-
+        if (id(ball_valve).position == COVER_OPEN){
+          auto call = id(ball_valve).make_call();
+          call.set_command_close();
+          call.perform();
+        }
+        else if (id(ball_valve).position == COVER_CLOSED){
+          auto call = id(ball_valve).make_call();
+          call.set_command_open();
+          call.perform();
+        }
+        else if (id(ball_valve).current_operation == CoverOperation::COVER_OPERATION_IDLE){
+          auto call = id(ball_valve).make_call();
+          call.set_command_close();
+          call.perform();
+        }
+        else if (id(ball_valve).current_operation == CoverOperation::COVER_OPERATION_CLOSING || CoverOperation::COVER_OPERATION_OPENING){
+        auto call = id(ball_valve).make_call();
+        call.set_command_stop();
+        call.perform();
+        }
+    on_double_click:
+      lambda: |-
+        if (id(ball_valve).current_operation == CoverOperation::COVER_OPERATION_IDLE && id(ball_valve).position != (COVER_CLOSED || COVER_OPEN)){
+          auto call = id(ball_valve).make_call();
+          call.set_command_open();
+          call.perform();
+        }
+
+cover:
+  - platform: endstop
+    name: "Ball valve"
+    id: ball_valve
+    open_action:
+      - switch.turn_on: open_pin
+      - light.turn_on: 
+          id: open_indicator
+          effect: pulse
+    open_duration: 5sec
+    open_endstop: open_endstop
+    close_action:
+      - switch.turn_on: close_pin
+      - light.turn_on: 
+          id: open_indicator
+          effect: pulse
+    close_duration: 5sec
+    close_endstop: closed_endstop
+    stop_action:
+      - switch.turn_off: open_pin
+      - switch.turn_off: close_pin
+    max_duration: 5sec
