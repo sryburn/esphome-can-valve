@@ -27,20 +27,27 @@ esphome:
                 id: open_indicator
                 effect: none
                 brightness: 100%
+            - delay: 1s #allow receiving controller extra time to boot on system power cycle
             - canbus.send: 
-                data: [0x01]
+                data: [0x02]
             - logger.log: "confirmed open state"                  
-          else:
-            - if:
-                condition: 
-                  lambda: 'return (!id(closed_endstop).state);'
-                then:
-                  - light.turn_on: 
-                      id: open_indicator
-                      effect: pulse
-                  - canbus.send: 
-                      data: [0x00]
-                  - logger.log: "confirmed closed state"                         
+
+      - if:
+          condition:
+            lambda: 'return (id(closed_endstop).state);'        
+          then:
+            - delay: 1s
+            - canbus.send: 
+                data: [0x00]
+            - logger.log: "confirmed closed state"
+
+      - if:
+          condition:
+            lambda: 'return (!id(open_endstop).state) && (!id(closed_endstop).state);'
+          then:
+            - light.turn_on: 
+                id: open_indicator
+                effect: pulse                    
 
 esp32:
   board: esp32-c3-devkitm-1
