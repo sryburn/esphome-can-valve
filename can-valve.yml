@@ -1,7 +1,7 @@
 substitutions:
   name: can-valve
   friendly_name: can-valve
-  can_id: '1'
+  canbus_id: '1'
   # PIN DEFINITIONS
   # elements
   led_pin: '6'
@@ -71,9 +71,9 @@ canbus:
   - platform: esp32_can
     rx_pin: $can_rx_pin
     tx_pin: $can_tx_pin
-    can_id: $can_id
+    can_id: $canbus_id
     on_frame: #An automation to perform when a CAN frame is received. See on_frame Trigger.
-    - can_id: $can_id # the received can_id
+    - can_id: $canbus_id # the received can_id
       then:
         - lambda: |-
             if(x.size() > 0) {
