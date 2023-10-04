@@ -1,7 +1,7 @@
 substitutions:
   name: can-valve
   friendly_name: can-valve
-  canbus_id: '1'
+  can_id: '1'
   # PIN DEFINITIONS
   # elements
   led_pin: '6'
@@ -29,6 +29,7 @@ esphome:
                 brightness: 100%
             - delay: 1s #allow receiving controller extra time to boot on system power cycle
             - canbus.send: 
+                can_id: $can_id
                 data: [0x02]
             - logger.log: "confirmed open state"                  
 
@@ -38,6 +39,7 @@ esphome:
           then:
             - delay: 1s
             - canbus.send: 
+                can_id: $can_id
                 data: [0x00]
             - logger.log: "confirmed closed state"
 
@@ -71,9 +73,9 @@ canbus:
   - platform: esp32_can
     rx_pin: $can_rx_pin
     tx_pin: $can_tx_pin
-    can_id: $canbus_id
+    can_id: $can_id
     on_frame: #An automation to perform when a CAN frame is received. See on_frame Trigger.
-    - can_id: $canbus_id # the received can_id
+    - can_id: $can_id # the received can_id
       then:
         - lambda: |-
             if(x.size() > 0) {
@@ -149,11 +151,13 @@ binary_sensor:
           id: open_indicator 
           effect: none
           brightness: 100%
-      - canbus.send: 
+      - canbus.send:
+          can_id: $can_id
           data: [0x02]
       - logger.log: "confirmed open state"
     on_release:
       - canbus.send: 
+          can_id: $can_id
           data: [0x03]
       - logger.log: "confirmed no longer open"                     
   - platform: gpio
@@ -167,10 +171,12 @@ binary_sensor:
       then:
         - light.turn_off: open_indicator
         - canbus.send: 
+            can_id: $can_id
             data: [0x00]
         - logger.log: "confirmed closed state"
     on_release:
       - canbus.send: 
+          can_id: $can_id
           data: [0x01]
       - logger.log: "confirmed no longer closed"                       
   - platform: gpio
