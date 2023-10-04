@@ -233,4 +233,4 @@ cover:
     stop_action:
       - switch.turn_off: open_pin
       - switch.turn_off: close_pin
-    max_duration: 5sec
+    max_duration: 7sec
