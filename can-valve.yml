@@ -66,7 +66,6 @@ ota:
 
 wifi:
   ap: {}
-  enable_on_boot: false
 
 captive_portal:
    
@@ -137,14 +136,6 @@ light:
       - pulse:
           update_interval: 0.2s
           transition_length: 0.2s
-      - pulse:
-          name: "Fast Pulse"
-          transition_length: 0.1s
-          update_interval: 0.1s   
-      - pulse:
-          name: "Slow Pulse"
-          transition_length: 0.5s
-          update_interval: 0.5s             
 
 binary_sensor:
   - platform: gpio
@@ -226,24 +217,6 @@ binary_sensor:
           call.set_command_open();
           call.perform();
         }
-    on_multi_click:
-      - timing:
-          - ON for 2s to 5s
-          - OFF for at least 0.5s
-        then:
-          - logger.log: "Single Long Clicked"
-          - if:
-              condition: wifi.enabled
-              then:
-                - wifi.disable:
-                - light.turn_on: 
-                    id: open_indicator
-                    effect: "Slow Pulse"  
-              else:
-                - wifi.enable:
-                - light.turn_on: 
-                    id: open_indicator
-                    effect: "Fast Pulse"   
 
 cover:
   - platform: endstop
