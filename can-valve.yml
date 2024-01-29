@@ -153,12 +153,12 @@ binary_sensor:
           brightness: 100%
       - canbus.send:
           can_id: $can_id
-          data: [0x02]
+          data: [0x05]
       - logger.log: "confirmed open state"
     on_release:
       - canbus.send: 
           can_id: $can_id
-          data: [0x03]
+          data: [0x06]
       - logger.log: "confirmed no longer open"                     
   - platform: gpio
     pin:
@@ -172,12 +172,12 @@ binary_sensor:
         - light.turn_off: open_indicator
         - canbus.send: 
             can_id: $can_id
-            data: [0x00]
+            data: [0x03]
         - logger.log: "confirmed closed state"
     on_release:
       - canbus.send: 
           can_id: $can_id
-          data: [0x01]
+          data: [0x04]
       - logger.log: "confirmed no longer closed"                       
   - platform: gpio
     pin: 
