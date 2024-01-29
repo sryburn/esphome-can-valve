@@ -30,8 +30,8 @@ esphome:
             - delay: 1s #allow receiving controller extra time to boot on system power cycle
             - canbus.send: 
                 can_id: $can_id
-                data: [0x02]
-            - logger.log: "confirmed open state"                  
+                data: [0x05]
+            - logger.log: "confirmed open state on boot"                  
 
       - if:
           condition:
@@ -40,8 +40,8 @@ esphome:
             - delay: 1s
             - canbus.send: 
                 can_id: $can_id
-                data: [0x00]
-            - logger.log: "confirmed closed state"
+                data: [0x03]
+            - logger.log: "confirmed closed state on boot"
 
       - if:
           condition:
