@@ -28,9 +28,9 @@ esphome:
                 effect: none
                 brightness: 100%
             - delay: 1s #allow receiving controller extra time to boot on system power cycle
-            - canbus.send: 
-                can_id: $can_id
-                data: [0x05]
+            # - canbus.send: 
+            #     can_id: $can_id
+            #     data: [0x05]
             - logger.log: "confirmed open state on boot"                  
 
       - if:
@@ -38,9 +38,9 @@ esphome:
             lambda: 'return (id(closed_endstop).state);'        
           then:
             - delay: 1s
-            - canbus.send: 
-                can_id: $can_id
-                data: [0x03]
+            # - canbus.send: 
+            #     can_id: $can_id
+            #     data: [0x03]
             - logger.log: "confirmed closed state on boot"
 
       - if:
@@ -69,45 +69,45 @@ wifi:
 
 captive_portal:
    
-canbus:
-  - platform: esp32_can
-    rx_pin: $can_rx_pin
-    tx_pin: $can_tx_pin
-    can_id: $can_id
-    on_frame: #An automation to perform when a CAN frame is received. See on_frame Trigger.
-    - can_id: $can_id # the received can_id
-      then:
-        - lambda: |-
-            if(x.size() > 0) {
-              switch(x[0]) {
-                case 0x0: 
-                  if (id(ball_valve).position != COVER_CLOSED){
-                    auto call = id(ball_valve).make_call();
-                    call.set_command_close();
-                    call.perform();
-                    ESP_LOGD("CAN", "closing as instructed"); 
-                  } else {
-                    ESP_LOGD("CAN", "received closing instruction but already closed"); 
-                  }                 
-                  break;
-                case 0x1: 
-                  if (id(ball_valve).position != COVER_OPEN){
-                    auto call = id(ball_valve).make_call();
-                    call.set_command_open();
-                    call.perform();
-                    ESP_LOGD("CAN", "opening as instructed"); 
-                  } else {
-                    ESP_LOGD("CAN", "received opening instruction but already open"); 
-                  }                 
-                  break;        
-                case 0x2: 
-                    auto call = id(ball_valve).make_call();
-                    call.set_command_stop();
-                    call.perform();
-                    ESP_LOGD("CAN", "stopping as instructed"); 
-                  break;                             
-              }
-            }
+# canbus:
+#   - platform: esp32_can
+#     rx_pin: $can_rx_pin
+#     tx_pin: $can_tx_pin
+#     can_id: $can_id
+#     on_frame: #An automation to perform when a CAN frame is received. See on_frame Trigger.
+#     - can_id: $can_id # the received can_id
+#       then:
+#         - lambda: |-
+#             if(x.size() > 0) {
+#               switch(x[0]) {
+#                 case 0x0: 
+#                   if (id(ball_valve).position != COVER_CLOSED){
+#                     auto call = id(ball_valve).make_call();
+#                     call.set_command_close();
+#                     call.perform();
+#                     ESP_LOGD("CAN", "closing as instructed"); 
+#                   } else {
+#                     ESP_LOGD("CAN", "received closing instruction but already closed"); 
+#                   }                 
+#                   break;
+#                 case 0x1: 
+#                   if (id(ball_valve).position != COVER_OPEN){
+#                     auto call = id(ball_valve).make_call();
+#                     call.set_command_open();
+#                     call.perform();
+#                     ESP_LOGD("CAN", "opening as instructed"); 
+#                   } else {
+#                     ESP_LOGD("CAN", "received opening instruction but already open"); 
+#                   }                 
+#                   break;        
+#                 case 0x2: 
+#                     auto call = id(ball_valve).make_call();
+#                     call.set_command_stop();
+#                     call.perform();
+#                     ESP_LOGD("CAN", "stopping as instructed"); 
+#                   break;                             
+#               }
+#             }
  
 switch:
   - platform: gpio
@@ -151,14 +151,14 @@ binary_sensor:
           id: open_indicator 
           effect: none
           brightness: 100%
-      - canbus.send:
-          can_id: $can_id
-          data: [0x05]
+      # - canbus.send:
+      #     can_id: $can_id
+      #     data: [0x05]
       - logger.log: "confirmed open state"
     on_release:
-      - canbus.send: 
-          can_id: $can_id
-          data: [0x06]
+      # - canbus.send: 
+      #     can_id: $can_id
+      #     data: [0x06]
       - logger.log: "confirmed no longer open"                     
   - platform: gpio
     pin:
@@ -170,14 +170,14 @@ binary_sensor:
     on_press:
       then:
         - light.turn_off: open_indicator
-        - canbus.send: 
-            can_id: $can_id
-            data: [0x03]
+        # - canbus.send: 
+        #     can_id: $can_id
+        #     data: [0x03]
         - logger.log: "confirmed closed state"
     on_release:
-      - canbus.send: 
-          can_id: $can_id
-          data: [0x04]
+      # - canbus.send: 
+      #     can_id: $can_id
+      #     data: [0x04]
       - logger.log: "confirmed no longer closed"                       
   - platform: gpio
     pin: 
