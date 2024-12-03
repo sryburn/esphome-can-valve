@@ -155,12 +155,16 @@ binary_sensor:
       - canbus.send:
           can_id: $can_id
           data: [0x05]
-      - logger.log: "confirmed open state"
+      - logger.log: "open"
     on_release:
-      - canbus.send: 
-          can_id: $can_id
-          data: [0x06]
-      - logger.log: "confirmed no longer open"                     
+      - if:
+          condition:
+            switch.is_on: close_pin
+          then:
+            - canbus.send: 
+                can_id: $can_id
+                data: [0x06]
+            - logger.log: "closing"                     
   - platform: gpio
     pin:
       number: $close_endstop_pin
@@ -174,12 +178,16 @@ binary_sensor:
         - canbus.send: 
             can_id: $can_id
             data: [0x03]
-        - logger.log: "confirmed closed state"
+        - logger.log: "closed"
     on_release:
-      - canbus.send: 
-          can_id: $can_id
-          data: [0x04]
-      - logger.log: "confirmed no longer closed"                       
+      - if:
+          condition:
+            switch.is_on: open_pin
+          then:  
+            - canbus.send: 
+                can_id: $can_id
+                data: [0x04]
+            - logger.log: "opening"                       
   - platform: gpio
     pin: 
       number: $pushbutton_pin
