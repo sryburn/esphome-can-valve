@@ -114,11 +114,21 @@ switch:
   - platform: gpio
     pin: $open_pin
     id: open_pin
+    on_turn_on:
+      - canbus.send: 
+        can_id: $can_id
+          data: [0x04]
+      - logger.log: "opening" 
     interlock: &interlock_group [open_pin, close_pin]
     # restore_mode: ALWAYS_OFF
   - platform: gpio
     pin: $close_pin
     id: close_pin
+    on_turn_on:
+      - canbus.send: 
+        can_id: $can_id
+          data: [0x06]
+      - logger.log: "closing"     
     interlock: *interlock_group
     # restore_mode: ALWAYS_OFF
 
@@ -156,15 +166,15 @@ binary_sensor:
           can_id: $can_id
           data: [0x05]
       - logger.log: "open"
-    on_release:
-      - if:
-          condition:
-            switch.is_on: close_pin
-          then:
-            - canbus.send: 
-                can_id: $can_id
-                data: [0x06]
-            - logger.log: "closing"                     
+    # on_release:
+    #   - if:
+    #       condition:
+    #         switch.is_on: close_pin
+    #       then:
+    #         - canbus.send: 
+    #             can_id: $can_id
+    #             data: [0x06]
+    #         - logger.log: "closing"                     
   - platform: gpio
     pin:
       number: $close_endstop_pin
@@ -179,15 +189,15 @@ binary_sensor:
             can_id: $can_id
             data: [0x03]
         - logger.log: "closed"
-    on_release:
-      - if:
-          condition:
-            switch.is_on: open_pin
-          then:  
-            - canbus.send: 
-                can_id: $can_id
-                data: [0x04]
-            - logger.log: "opening"                       
+    # on_release:
+    #   - if:
+    #       condition:
+    #         switch.is_on: open_pin
+    #       then:  
+    #         - canbus.send: 
+    #             can_id: $can_id
+    #             data: [0x04]
+    #         - logger.log: "opening"                       
   - platform: gpio
     pin: 
       number: $pushbutton_pin
