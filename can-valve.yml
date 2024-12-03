@@ -116,7 +116,7 @@ switch:
     id: open_pin
     on_turn_on:
       - canbus.send: 
-        can_id: $can_id
+          can_id: $can_id
           data: [0x04]
       - logger.log: "opening" 
     interlock: &interlock_group [open_pin, close_pin]
@@ -126,7 +126,7 @@ switch:
     id: close_pin
     on_turn_on:
       - canbus.send: 
-        can_id: $can_id
+          can_id: $can_id
           data: [0x06]
       - logger.log: "closing"     
     interlock: *interlock_group
