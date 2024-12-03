@@ -69,45 +69,45 @@ wifi:
 
 captive_portal:
    
-# canbus:
-#   - platform: esp32_can
-#     rx_pin: $can_rx_pin
-#     tx_pin: $can_tx_pin
-#     can_id: $can_id
-#     on_frame: #An automation to perform when a CAN frame is received. See on_frame Trigger.
-#     - can_id: $can_id # the received can_id
-#       then:
-#         - lambda: |-
-#             if(x.size() > 0) {
-#               switch(x[0]) {
-#                 case 0x0: 
-#                   if (id(ball_valve).position != COVER_CLOSED){
-#                     auto call = id(ball_valve).make_call();
-#                     call.set_command_close();
-#                     call.perform();
-#                     ESP_LOGD("CAN", "closing as instructed"); 
-#                   } else {
-#                     ESP_LOGD("CAN", "received closing instruction but already closed"); 
-#                   }                 
-#                   break;
-#                 case 0x1: 
-#                   if (id(ball_valve).position != COVER_OPEN){
-#                     auto call = id(ball_valve).make_call();
-#                     call.set_command_open();
-#                     call.perform();
-#                     ESP_LOGD("CAN", "opening as instructed"); 
-#                   } else {
-#                     ESP_LOGD("CAN", "received opening instruction but already open"); 
-#                   }                 
-#                   break;        
-#                 case 0x2: 
-#                     auto call = id(ball_valve).make_call();
-#                     call.set_command_stop();
-#                     call.perform();
-#                     ESP_LOGD("CAN", "stopping as instructed"); 
-#                   break;                             
-#               }
-#             }
+canbus:
+  - platform: esp32_can
+    rx_pin: $can_rx_pin
+    tx_pin: $can_tx_pin
+    can_id: $can_id
+    on_frame: #An automation to perform when a CAN frame is received. See on_frame Trigger.
+    - can_id: $can_id # the received can_id
+      then:
+        - lambda: |-
+            if(x.size() > 0) {
+              switch(x[0]) {
+                case 0x0: 
+                  if (id(ball_valve).position != COVER_CLOSED){
+                    auto call = id(ball_valve).make_call();
+                    call.set_command_close();
+                    call.perform();
+                    ESP_LOGD("CAN", "closing as instructed"); 
+                  } else {
+                    ESP_LOGD("CAN", "received closing instruction but already closed"); 
+                  }                 
+                  break;
+                case 0x1: 
+                  if (id(ball_valve).position != COVER_OPEN){
+                    auto call = id(ball_valve).make_call();
+                    call.set_command_open();
+                    call.perform();
+                    ESP_LOGD("CAN", "opening as instructed"); 
+                  } else {
+                    ESP_LOGD("CAN", "received opening instruction but already open"); 
+                  }                 
+                  break;        
+                case 0x2: 
+                    auto call = id(ball_valve).make_call();
+                    call.set_command_stop();
+                    call.perform();
+                    ESP_LOGD("CAN", "stopping as instructed"); 
+                  break;                             
+              }
+            }
  
 switch:
   - platform: gpio
